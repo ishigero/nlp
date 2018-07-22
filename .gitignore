@@ -1,3 +1,4 @@
-data/acllmdb/*
+data/*
+!.gitkeep
 src/tflogs/*
 *.pyc
