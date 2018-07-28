@@ -1,46 +1,29 @@
 # coding: utf-8
 import os
 
+
+def _read_file(dir_name, file_names):
+  for file_name in file_names:
+    with open(dir_name + '/' + file_name, encoding='utf_8') as f:
+      yield f.read()
+
+
 img_dir = '/app/data/aclImdb'
 train_dir = os.path.join(img_dir, 'train')
-labels = []
-texts = None
-# for label_type in ['neg', 'pos']:
-#   dir_name = os.path.join(train_dir, label_type)
-#   for fname in os.listdir(dir_name):
-#     if fname[-4:] == '.txt':
-#       f = open(os.path.join(dir_name, fname), encoding='utf_8')
-#       texts.append(f.read())
-#       f.close()
-#       if label_type == 'neg':
-#         labels.append(0)
-#       else:
-#         labels.append(1)
-
-
-# for label_type in ['neg', 'pos']:
-#   dir_name = os.path.join(train_dir, label_type)
-#   for fname in os.listdir(dir_name):
-#     if fname[-4:] == '.txt':
-#       f = open(os.path.join(dir_name, fname), encoding='utf_8')
-#       texts.append(f.read())
-#       f.close()
-#       if label_type == 'neg':
-#         labels.append(0)
-#       else:
-#         labels.append(1)
-#f = open(os.path.join(dir_name, txt_file), encoding='utf_8')
-
-
-
-
 for label_type in ['neg', 'pos']:
   dir_name = os.path.join(train_dir, label_type)
-  text_files = list(map(lambda txt_file: txt_file, filter(lambda f_name: f_name[-4:] == '.txt', os.listdir(dir_name))))
-  open_files = list(map(lambda x: open(os.path.join(dir_name, x), encoding='utf_8'), text_files))
-  texts = list(map(lambda txt_file: txt_file.read(), open_files))
-  lambda o_file: o_file.close(), open_files
-label_val = 0 if label_type == 'neg' else 1
-labels.append(label_val)
+  file_names = list(map(lambda txt_file: txt_file, filter(lambda f_name: f_name[-4:] == '.txt', os.listdir(dir_name))))  
+  if label_type == 'neg':
+    g_texts_neg = _read_file(dir_name, file_names)
+  else:
+    g_texts_pos = _read_file(dir_name, file_names)
 
-# ジェネレータにする
+texts_neg = list(map(lambda text: text, g_texts_neg))
+texts_pos = list(map(lambda text: text, g_texts_pos))
+label_neg = list(map(lambda txt: 0, texts_neg))  
+label_pos = list(map(lambda txt: 1, texts_pos))
+
+texts_neg.extend(texts_pos)
+label_neg.extend(label_pos)
+texts = texts_neg
+labels = label_neg
