@@ -2,3 +2,4 @@ data/*
 !.gitkeep
 src/tflogs/*
 *.pyc
+.DS_Store
