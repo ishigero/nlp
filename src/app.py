@@ -3,9 +3,8 @@ from classifier import Classifier
 
 
 def main():
-    c = Classifier()
+    Classifier()
     
-
 
 if __name__ == '__main__':
     main()

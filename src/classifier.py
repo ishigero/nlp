@@ -1,28 +1,69 @@
 # coding: utf-8
 import os
 import numpy as np
+from keras.models import Sequential
 from keras.preprocessing.text import Tokenizer
+from keras.layers import Flatten, Dense, Embedding
 from keras.preprocessing.sequence import pad_sequences
 
 class Classifier:
     
     def __init__(self):
+        self.word_index = None
+        self.embedding_dim = 100
+        self.max_words = 10000
+        self.max_len = 30
         self.texts, self._labels = self._load_data()
         self.x_train, self.y_train, self.x_val, self.y_val = self.tokenize()
+        self.model = self.build_model(self.word_embedding(self.word_index))
+
+
+    def build_model(self, e_matrix):
+        model = Sequential()
+        model.add(Embedding(self.max_words, self.embedding_dim, input_length=self.max_len))
+        model.add(Flatten())
+        model.add(Dense(1, activation='sigmoid'))
+        model.compile(optimizer='rmsprop', loss='binary_crossentropy', metrics=['acc'])
+        model.layers[0].set_weights([e_matrix])
+        model.layers[0].trainable = False
+        model.summary()
+        
+
+    def word_embedding(self, w_index):
+        e_i = self.read_embedd_file()
+        embedding_matrix = np.zeros((self.max_words, self.embedding_dim))
+        for word, i in w_index.items():
+            embedding_vector = e_i.get(word)
+            if i < self.max_words:
+                if embedding_vector is not None:
+                    embedding_matrix[i] = embedding_vector
+        return embedding_matrix
+
+
+    def read_embedd_file(self):
+        glove_dir = '/app/data/glove.6B'
+        embeddings_index = {}
+        with open(os.path.join(glove_dir, 'glove.6B.100d.txt'), encoding='utf_8') as f:
+            for line in f:
+                values = line.split()
+                word = values[0]
+                coefs = np.asarray(values[1:], dtype='float32')
+                embeddings_index[word] = coefs
+        print('Found %s word vectors.' % len(embeddings_index))
+        return embeddings_index
 
 
     def tokenize(self):
         max_len = 100
         training_samples = 200
         validation_samples = 10000
-        max_words = 10000
 
-        tokenizer = Tokenizer(num_words=max_words)
+        tokenizer = Tokenizer(num_words=self.max_words)
         tokenizer.fit_on_texts(self.texts)
         sequences = tokenizer.texts_to_sequences(self.texts)
 
-        word_index = tokenizer.word_index
-        print('Found %s unique tokens.' % len(word_index))
+        self.word_index = tokenizer.word_index
+        print('Found %s unique tokens.' % len(self.word_index))
         data = pad_sequences(sequences, maxlen=max_len)
 
         labels = np.asarray(self._labels)
